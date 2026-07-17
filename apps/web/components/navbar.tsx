@@ -33,6 +33,12 @@ export function Navbar() {
           >
             Upskill
           </Link>
+          <Link
+            href="/profile"
+            className="text-foreground/60 transition-colors hover:text-foreground/80"
+          >
+            Profile
+          </Link>
         </nav>
         <div className="flex items-center gap-4">
           <Button variant="outline" className="hidden md:inline-flex">
