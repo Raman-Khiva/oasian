@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
@@ -35,8 +35,8 @@ import {
   Share2
 } from "lucide-react"
 
-export default function JobsPage() {
-  const searchParams = useSearchParams()
+function JobsPageContent() {
+  const searchParams = useSearchParams();
   const initialJobId = searchParams.get("jobId")
 
   const [jobs] = useState<Job[]>(DUMMY_JOBS)
@@ -700,5 +700,22 @@ export default function JobsPage() {
       )}
 
     </div>
+  )
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex flex-col">
+          <Navbar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        </div>
+      }
+    >
+      <JobsPageContent />
+    </Suspense>
   )
 }
