@@ -1,3 +1,4 @@
+import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@workspace/ui/components/button"
 import { ArrowRight } from "lucide-react"
@@ -37,20 +38,24 @@ export function Hero() {
             </div>
 
             <div className="flex flex-col justify-center gap-3 min-[400px]:flex-row lg:justify-start">
-              <Button
-                size="lg"
-                className="group h-12 bg-blue-600 px-8 text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700"
-              >
-                Coming Soon
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 bg-background/50 px-8 backdrop-blur-sm"
-              >
-                Join Waitlist
-              </Button>
+              <Link href="/resume">
+                <Button
+                  size="lg"
+                  className="group h-12 w-full min-[400px]:w-auto bg-gradient-to-r from-blue-600 to-violet-600 px-8 text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-violet-700"
+                >
+                  Analyze Resume Free
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <Link href="/jobs">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 w-full min-[400px]:w-auto bg-background/50 px-8 backdrop-blur-sm hover:bg-muted"
+                >
+                  Explore 20+ Jobs
+                </Button>
+              </Link>
             </div>
 
             <div className="mx-auto flex w-fit items-center justify-center gap-4 border-t pt-4 text-sm text-muted-foreground lg:mx-0 lg:justify-start">
@@ -94,7 +99,7 @@ export function Hero() {
         <div className="mt-16 flex animate-in justify-center text-center delay-300 duration-1000 fade-in slide-in-from-bottom-4">
           <div className="max-w-2xl border-t border-foreground/10 pt-2">
             <p className="text-lg text-muted-foreground italic">
-              &quot;Maa kasam, jiwan ke L lage pade hain.&quot;
+              &quot;First impression is the last impression.&quot;
             </p>
             <p className="mt-2 text-end font-semibold text-foreground/70">
               - Naman Jain,{" "}

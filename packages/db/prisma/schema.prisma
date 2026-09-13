@@ -1,0 +1,205 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// USER & PROFILE MODELS (CLERK AUTH INTEGRATED)
+// ==========================================
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  profile      Profile?
+  resumes      Resume[]
+  savedJobs    SavedJob[]
+  applications JobApplication[]
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name      String
+  title     String
+  location  String?
+  company   String?
+  about     String?  @db.Text
+  skills    String[] @default([])
+  
+  // Contact & Social
+  email     String?
+  phone     String?
+  portfolio String?
+
+  // Structured Experience & Education (JSON arrays matching UI types)
+  experience Json?   @default("[]")
+  education  Json?   @default("[]")
+
+  // Sync tracking with resume
+  syncedWithResumeId String?
+  lastSyncedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ==========================================
+// RESUME & ANALYSIS MODELS
+// ==========================================
+
+model Resume {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  versionNumber Int      @default(1)
+  versionName   String   // e.g. "v1 - Original (Uploaded)", "v2 - AI Optimized"
+  isCurrent     Boolean  @default(false)
+
+  // Header Details
+  fullName  String
+  title     String
+  email     String
+  phone     String?
+  location  String?
+  portfolio String?
+  linkedin  String?
+  github    String?
+  summary   String?  @db.Text
+
+  // Structured Content
+  skills         String[] @default([])
+  experience     Json     @default("[]") // Array of ExperienceItem
+  education      Json     @default("[]") // Array of EducationItem
+  projects       Json     @default("[]") // Array of ProjectItem
+  certifications String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  analyses     ResumeAnalysis[]
+  applications JobApplication[]
+
+  @@index([userId])
+}
+
+model ResumeAnalysis {
+  id        String   @id @default(cuid())
+  resumeId  String
+  resume    Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  // Scores
+  overallScore Int
+  atsScore     Int
+  impactScore  Int
+  brevityScore Int
+  skillsScore  Int
+  keySummary   String @db.Text
+
+  // Detailed Analysis breakdowns (JSON)
+  strongSections Json   @default("[]") // SectionScore[]
+  weakSections   Json   @default("[]") // WeakSection[]
+  missingOrErrors Json  @default("[]") // MissingOrError[]
+  improvements   Json   @default("[]") // ImprovementItem[]
+
+  // AI Career Match Recommendations
+  targetRoles       String[] @default([])
+  recommendedJobIds String[] @default([])
+
+  createdAt DateTime @default(now())
+
+  @@index([resumeId])
+}
+
+// ==========================================
+// JOBS & APPLICATIONS MODELS
+// ==========================================
+
+model Job {
+  id             String   @id // e.g. "job-1", "job-2" or cuid
+  title          String
+  company        String
+  companyLogo    String   @default("CP")
+  companyColor   String   @default("from-blue-600 to-indigo-600")
+  location       String
+  workplaceType  String   // "Remote" | "Hybrid" | "On-site"
+  jobType        String   // "Full-time" | "Contract" | "Internship" | "Part-time"
+  salary         String
+  experience     String   // e.g. "Senior (4-7 yrs)"
+  category       String   // "Full Stack" | "Frontend" | "Backend" | "AI/ML" | "DevOps/Cloud" | "Mobile" | "Design/Product"
+  tags           String[] @default([])
+  featured       Boolean  @default(false)
+  department     String
+  applicantCount Int      @default(0)
+
+  description      String   @db.Text
+  responsibilities String[] @default([])
+  requirements     String[] @default([])
+  benefits         String[] @default([])
+  postedDate       String   // e.g. "2 hours ago" or human readable date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  savedBy      SavedJob[]
+  applications JobApplication[]
+
+  @@index([category])
+  @@index([workplaceType])
+  @@index([featured])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
+}
+
+model JobApplication {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId         String
+  job           Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  resumeId      String?
+  resume        Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeVersion String   // Snapshot of version name used when applying
+  
+  status        String   @default("applied") // "applied" | "reviewing" | "interview" | "rejected" | "offer"
+  notes         String?  @db.Text
+  appliedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
+}
