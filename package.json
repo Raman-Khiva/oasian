@@ -25,5 +25,8 @@
   "packageManager": "pnpm@10.33.4",
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1"
   }
 }

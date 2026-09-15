@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import { Pool, neonConfig } from "@neondatabase/serverless"
+import { neonConfig } from "@neondatabase/serverless"
 import { PrismaNeon } from "@prisma/adapter-neon"
 import ws from "ws"
 
@@ -18,8 +18,7 @@ export function createPrismaClient(): PrismaClient {
 
   // If explicitly opted into Neon Serverless Driver Adapter or in Edge runtime
   if (connectionString && process.env.USE_NEON_ADAPTER === "true") {
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaNeon(pool)
+    const adapter = new PrismaNeon({ connectionString })
     return new PrismaClient({
       adapter,
       log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],

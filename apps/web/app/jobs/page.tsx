@@ -39,7 +39,7 @@ function JobsPageContent() {
   const searchParams = useSearchParams();
   const initialJobId = searchParams.get("jobId")
 
-  const [jobs] = useState<Job[]>(DUMMY_JOBS)
+  const [jobs, setJobs] = useState<Job[]>(DUMMY_JOBS)
   const [resume, setResume] = useState<ResumeData | null>(null)
   const [resumeVersions, setResumeVersions] = useState<ResumeData[]>([])
   const [savedJobIds, setSavedJobIds] = useState<string[]>([])
@@ -58,7 +58,7 @@ function JobsPageContent() {
   const [selectedResumeVersion, setSelectedResumeVersion] = useState<string>("")
   const [applySuccessToast, setApplySuccessToast] = useState<string | null>(null)
 
-  // Load client data
+  // Load client data & Neon DB jobs
   useEffect(() => {
     const currentResume = getStoredResume()
     const versions = getStoredResumeVersions()
@@ -72,6 +72,26 @@ function JobsPageContent() {
     setSavedJobIds(getSavedJobIds())
     const applied = getJobApplications().map(a => a.jobId)
     setAppliedJobIds(applied)
+
+    // Fetch from Neon PostgreSQL via /api/jobs
+    fetch("/api/jobs")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.jobs && data.jobs.length > 0) {
+          setJobs(data.jobs)
+          if (Array.isArray(data.savedJobIds) && data.savedJobIds.length > 0) {
+            setSavedJobIds(data.savedJobIds)
+          }
+          if (Array.isArray(data.appliedJobIds) && data.appliedJobIds.length > 0) {
+            setAppliedJobIds(data.appliedJobIds)
+          }
+          if (initialJobId) {
+            const found = data.jobs.find((j: Job) => j.id === initialJobId)
+            if (found) setActiveJob(found)
+          }
+        }
+      })
+      .catch(() => {})
 
     if (initialJobId) {
       const found = DUMMY_JOBS.find(j => j.id === initialJobId)
@@ -126,6 +146,22 @@ function JobsPageContent() {
     e?.stopPropagation()
     const updated = toggleSaveJobId(jobId)
     setSavedJobIds(updated)
+
+    // Sync to Neon DB for authenticated Clerk users
+    fetch("/api/jobs/saved", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.savedJobIds) {
+          setSavedJobIds(data.savedJobIds)
+        }
+      })
+      .catch((err) => {
+        console.warn("[JobsPage] Could not sync saved job to DB:", err)
+      })
   }
 
   const handleOpenApplyModal = (job: Job, e?: React.MouseEvent) => {
@@ -148,36 +184,48 @@ function JobsPageContent() {
     setAppliedJobIds(prev => [...prev, activeJob.id])
     setIsApplyModalOpen(false)
     setApplySuccessToast(`Application submitted to ${activeJob.company} for ${activeJob.title}!`)
+
+    // Sync application to Neon DB for authenticated Clerk users
+    fetch("/api/jobs/apply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: activeJob.id,
+        resumeVersion: selectedResumeVersion || "Current Resume",
+      }),
+    }).catch((err) => {
+      console.warn("[JobsPage] Could not sync application to DB:", err)
+    })
   }
 
   const categories = ["All", "Full Stack", "Frontend", "Backend", "AI/ML", "DevOps/Cloud", "Mobile", "Design/Product"]
 
   return (
-    <div className="flex min-h-svh flex-col bg-slate-50 dark:bg-background text-foreground">
+    <div className="flex min-h-svh flex-col bg-slate-50 text-slate-900">
       <Navbar />
 
       {/* Success Toast */}
       {applySuccessToast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-800 shadow-xl backdrop-blur-md dark:bg-emerald-950/80 dark:text-emerald-200 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-emerald-200 bg-white p-4 text-emerald-900 shadow-xl animate-in slide-in-from-bottom-5 duration-300">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
           <span className="text-sm font-medium">{applySuccessToast}</span>
         </div>
       )}
 
       {/* Hero Header */}
-      <section className="border-b bg-background/80 backdrop-blur-md py-8 px-4 sm:px-6 lg:px-8">
+      <section className="border-b border-slate-200 bg-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 dark:bg-blue-900/60 px-3 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 mb-2">
                 <Sparkles className="h-3.5 w-3.5" />
-                AI Job Discovery • 20 Open Roles
+                Curated Career Opportunities
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
                 Explore Tech Jobs Tailored to Your Resume
               </h1>
-              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                Browse 20 curated engineering, AI, and design openings. Your uploaded resume is automatically matched with relevant opportunities.
+              <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+                Browse curated engineering, AI, and design openings. Your uploaded resume is automatically matched with relevant opportunities.
               </p>
             </div>
 

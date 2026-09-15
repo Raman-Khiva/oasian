@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@workspace/ui/components/button"
 import { Sparkles, Briefcase, User, Menu, X, FileText } from "lucide-react"
-import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
+import { SignInButton, SignUpButton, UserButton, Show } from "@clerk/nextjs"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -15,14 +15,12 @@ export function Navbar() {
     {
       name: "Resume Analyser",
       href: "/resume",
-      icon: Sparkles,
-      badge: "AI Builder"
+      icon: Sparkles
     },
     {
       name: "Find Jobs",
       href: "/jobs",
-      icon: Briefcase,
-      badge: "20 Active"
+      icon: Briefcase
     },
     {
       name: "Profile",
@@ -56,17 +54,12 @@ export function Navbar() {
                   href={link.href}
                   className={`relative flex items-center gap-2 rounded-lg px-3.5 py-2 transition-all ${
                     isActive
-                      ? "bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/50 dark:text-blue-300"
-                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                      ? "bg-blue-50 text-blue-700 font-semibold"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`} />
+                  <Icon className={`h-4 w-4 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
                   <span>{link.name}</span>
-                  {link.badge && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                      {link.badge}
-                    </span>
-                  )}
                 </Link>
               )
             })}
@@ -81,13 +74,39 @@ export function Navbar() {
               Analyze Resume
             </Button>
           </Link>
-          <SignInButton/>
-          <SignUpButton/>
-          <UserButton/>
+          
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="sm" className="font-semibold text-foreground/80 hover:text-foreground">
+                Sign In
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 shadow-sm font-semibold">
+                Sign Up
+              </Button>
+            </SignUpButton>
+          </Show>
+
+          <Show when="signed-in">
+            <div className="flex items-center gap-3 pl-1">
+              <UserButton
+                userProfileMode="modal"
+                appearance={{
+                  elements: {
+                    avatarBox: "h-9 w-9 ring-2 ring-blue-500/20 hover:ring-blue-500/50 transition-all",
+                  },
+                }}
+              />
+            </div>
+          </Show>
         </div>
 
         {/* Mobile menu trigger */}
         <div className="flex md:hidden items-center gap-2">
+          <Show when="signed-in">
+            <UserButton userProfileMode="modal" />
+          </Show>
           <Link href="/resume">
             <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700 h-8 px-3 text-xs">
               Analyze
@@ -119,37 +138,35 @@ export function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium ${
                     isActive
-                      ? "bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/50 dark:text-blue-300"
-                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                      ? "bg-blue-50 text-blue-700 font-semibold"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon className="h-4 w-4 text-blue-600" />
                     <span>{link.name}</span>
                   </div>
-                  {link.badge && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                      {link.badge}
-                    </span>
-                  )}
                 </Link>
               )
             })}
           </nav>
+
+          <div className="mt-4 pt-4 border-t flex flex-col gap-2">
+            <Show when="signed-out">
+              <SignInButton mode="modal">
+                <Button variant="outline" className="w-full justify-center">
+                  Sign In
+                </Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button className="w-full justify-center bg-blue-600 text-white hover:bg-blue-700">
+                  Sign Up Free
+                </Button>
+              </SignUpButton>
+            </Show>
+          </div>
         </div>
       )}
-
-      {/* Sub-banner */}
-      <div className="border-t border-foreground/10 bg-foreground/1 px-4 py-1.5 text-center text-xs font-medium text-foreground sm:px-6 lg:px-8">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-          </span>
-          <span className="font-semibold text-blue-600">AI Resume Engine 2.0 Live:</span>
-          Upload your resume for instant ATS scoring, personalized fixes, and 3 matched job opportunities!
-        </span>
-      </div>
     </header>
   )
 }

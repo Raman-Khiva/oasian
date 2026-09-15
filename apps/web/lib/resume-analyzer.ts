@@ -9,6 +9,29 @@ import {
 } from "./resume-types"
 import { DUMMY_JOBS } from "./jobs-data"
 
+export const EMPTY_RESUME: ResumeData = {
+  id: "resume-empty",
+  versionNumber: 1,
+  versionName: "My Resume",
+  updatedAt: new Date().toISOString(),
+  header: {
+    fullName: "",
+    title: "",
+    email: "",
+    phone: "",
+    location: "",
+    portfolio: "",
+    linkedin: "",
+    github: "",
+    summary: ""
+  },
+  skills: [],
+  experience: [],
+  education: [],
+  projects: [],
+  certifications: []
+}
+
 export const DEFAULT_RESUME: ResumeData = {
   id: "resume-v1",
   versionNumber: 1,
