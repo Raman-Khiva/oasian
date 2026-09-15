@@ -17,8 +17,8 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      savedJobs: saved.map((s) => s.job),
-      savedJobIds: saved.map((s) => s.jobId),
+      savedJobs: saved.map((s: any) => s.job),
+      savedJobIds: saved.map((s: any) => s.jobId),
     })
   } catch (error: any) {
     console.error("[/api/jobs/saved GET] Error:", error)
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       isSaved,
-      savedJobIds: currentSaved.map((s) => s.jobId),
+      savedJobIds: currentSaved.map((s: any) => s.jobId),
       message: isSaved ? "Job saved to your profile" : "Job removed from saved",
     })
   } catch (error: any) {

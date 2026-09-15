@@ -18,7 +18,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       applications,
-      appliedJobIds: applications.map((a) => a.jobId),
+      appliedJobIds: applications.map((a: any) => a.jobId),
     })
   } catch (error: any) {
     console.error("[/api/jobs/apply GET] Error:", error)
