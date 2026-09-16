@@ -57,16 +57,16 @@ export async function GET() {
         where: { userId: dbUser.id },
         select: { jobId: true },
       })
-      savedJobIds = saved.map((s) => s.jobId)
+      savedJobIds = saved.map((s: any) => s.jobId)
 
       const applied = await prisma.jobApplication.findMany({
         where: { userId: dbUser.id },
         select: { jobId: true },
       })
-      appliedJobIds = applied.map((a) => a.jobId)
+      appliedJobIds = applied.map((a: any) => a.jobId)
     }
 
-    const enhancedJobs = jobs.map((j) => ({
+    const enhancedJobs = jobs.map((j: any) => ({
       ...j,
       isSaved: savedJobIds.includes(j.id),
       isApplied: appliedJobIds.includes(j.id),
